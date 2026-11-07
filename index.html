@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jet Aircraft Performance Explorer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">AERO301 · Aircraft performance</p>
+        <h1>Jet aircraft performance explorer</h1>
+        <p class="lede">Steady, level, unaccelerated flight analysis using the agreed ISA atmosphere, parabolic drag polar, and constant-thrust jet model.</p>
+      </div>
+      <div class="model-tag"><span class="model-dot"></span> Front-end · SI units</div>
+    </header>
+
+    <form id="analysisForm" class="panel input-panel" novalidate>
+      <div class="section-heading"><div><h2>Model inputs</h2><p>Enter a supported aircraft and operating condition, then run the analysis.</p></div></div>
+      <div class="input-grid">
+        <fieldset>
+          <legend>Aircraft and aerodynamics</legend>
+          <div class="field-grid">
+            <div class="field"><label for="wingArea">Wing area <span>S · m²</span></label><input id="wingArea" type="number" step="any" required><small>10–500 m²</small></div>
+            <div class="field"><label for="aspectRatio">Aspect ratio <span>AR · -</span></label><input id="aspectRatio" type="number" step="any" required><small>4–15</small></div>
+            <div class="field"><label for="weight">Aircraft weight <span>W · N</span></label><input id="weight" type="number" step="any" required><small>10,000–3,000,000 N</small></div>
+            <div class="field"><label for="cd0">Zero-lift drag <span>C<sub>D0</sub> · -</span></label><input id="cd0" type="number" step="any" required><small>0.01–0.08</small></div>
+            <div class="field"><label for="oswald">Oswald efficiency <span>e · -</span></label><input id="oswald" type="number" step="any" required><small>0.5–1.0</small></div>
+            <div class="field"><label for="clMax">Maximum lift coefficient <span>C<sub>Lmax</sub> · -</span></label><input id="clMax" type="number" step="any" required><small>0.8–2.5</small></div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Operating condition</legend>
+          <div class="field-grid">
+            <div class="field"><label for="altitude">Altitude <span>h · m</span></label><input id="altitude" type="number" step="any" required><small>ISA troposphere: 0–11,000 m</small></div>
+            <div class="field"><label for="thrustAvailable">Thrust available <span>T<sub>A</sub> · N</span></label><input id="thrustAvailable" type="number" step="any" required><small>1,000–1,000,000 N</small></div>
+            <div class="field"><label for="vMin">Minimum airspeed <span>V<sub>min</sub> · m/s</span></label><input id="vMin" type="number" step="any" required><small>20–350 m/s</small></div>
+            <div class="field"><label for="vMax">Maximum airspeed <span>V<sub>max,input</sub> · m/s</span></label><input id="vMax" type="number" step="any" required><small>20–350 m/s</small></div>
+          </div>
+        </fieldset>
+      </div>
+      <div class="toolbar">
+        <button class="primary" type="submit">Run analysis</button>
+        <button class="secondary" type="button" id="loadCase">Load representative case</button>
+        <span class="toolbar-note">Changes are applied when you run the analysis.</span>
+      </div>
+    </form>
+
+    <section id="notices" class="notice-stack" aria-live="polite"></section>
+
+    <section id="results" hidden>
+      <div class="summary-layout">
+        <section class="panel block"><div class="section-heading"><div><h2>Characteristic performance</h2><p>Optima are checked against stall, Mach, and selected speed limits.</p></div></div><div id="metrics" class="metric-grid"></div></section>
+        <aside class="panel block"><div class="section-heading"><div><h2>ISA atmosphere</h2><p>1976 standard atmosphere · troposphere</p></div></div><div id="atmosphere" class="atmosphere-grid"></div></aside>
+      </div>
+
+      <section class="panel chart-section">
+        <div class="section-heading"><div><h2>Performance curves</h2><p>Valid points satisfy the stall and Mach 0.7 model limits.</p></div></div>
+        <div class="chart-grid">
+          <article class="chart-card"><h3>Thrust required and available</h3><canvas id="thrustChart" aria-label="Thrust required and available chart"></canvas><div id="thrustLegend" class="legend"></div><p id="thrustNote" class="chart-note"></p></article>
+          <article class="chart-card"><h3>Power required and available</h3><canvas id="powerChart" aria-label="Power required and available chart"></canvas><div id="powerLegend" class="legend"></div><p id="powerNote" class="chart-note"></p></article>
+          <article class="chart-card"><h3>Excess thrust</h3><canvas id="excessThrustChart" aria-label="Excess thrust chart"></canvas><div id="excessThrustLegend" class="legend"></div><p id="excessThrustNote" class="chart-note"></p></article>
+          <article class="chart-card"><h3>Excess power</h3><canvas id="excessPowerChart" aria-label="Excess power chart"></canvas><div id="excessPowerLegend" class="legend"></div><p id="excessPowerNote" class="chart-note"></p></article>
+          <article class="chart-card wide"><h3>Rate of climb</h3><canvas id="climbChart" aria-label="Rate of climb chart"></canvas><div id="climbLegend" class="legend"></div><p id="climbNote" class="chart-note"></p></article>
+        </div>
+      </section>
+
+      <details class="panel method-panel"><summary>Show equations, assumptions, and checks</summary><div class="method-grid"><div><h3>Equations</h3><p><code>T = T₀ + ah</code>, <code>p = p₀(T/T₀)<sup>−g₀/(aR)</sup></code>, <code>ρ = p/(RT)</code></p><p><code>K = 1/(πeAR)</code>, <code>C<sub>L</sub> = 2W/(ρV²S)</code>, <code>C<sub>D</sub> = C<sub>D0</sub> + KC<sub>L</sub>²</code></p><p><code>T<sub>R</sub> = ½ρV²SC<sub>D</sub></code>, <code>P<sub>R</sub> = T<sub>R</sub>V</code>, <code>P<sub>A</sub> = T<sub>A</sub>V</code></p></div><div><h3>Assumptions</h3><p>Jet aircraft, constant thrust at the selected altitude, steady-level unaccelerated flight, dry ideal air, and constant aerodynamic coefficients.</p><p>Inputs outside the supported ranges are rejected. Speeds below stall or above Mach 0.7 are excluded from valid results. Missing intersections and no-climb cases are reported explicitly.</p></div></div></details>
+    </section>
+    <footer>Runs entirely in the browser. No backend or external calculation service is required.</footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
